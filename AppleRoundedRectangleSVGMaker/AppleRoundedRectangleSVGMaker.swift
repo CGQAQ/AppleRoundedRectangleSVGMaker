@@ -14,19 +14,26 @@ struct TransparentWindowModifier: ViewModifier {
     }
 }
 
+class TransparentNSView: NSView {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard let window = window else { return }
+        window.isOpaque = false
+        window.backgroundColor = .clear
+    }
+}
+
 struct WindowAccessor: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            if let window = view.window {
-                window.isOpaque = false
-                window.backgroundColor = .clear
-            }
-        }
-        return view
+        TransparentNSView()
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func updateNSView(_ nsView: NSView, context: Context) {
+        if let window = nsView.window {
+            window.isOpaque = false
+            window.backgroundColor = .clear
+        }
+    }
 }
 
 @main
