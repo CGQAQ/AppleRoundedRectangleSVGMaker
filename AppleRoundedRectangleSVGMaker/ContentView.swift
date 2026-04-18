@@ -84,6 +84,7 @@ struct ContentView: View {
     @State private var cornerRadius: Double = 20
     @State private var viewBoxWidth: Double = 300
     @State private var viewBoxHeight: Double = 300
+    @State private var fillAlpha: Double = 100
     @State private var showCopiedToast = false
 
     var svgPath: String {
@@ -112,7 +113,7 @@ struct ContentView: View {
     var fullSVG: String {
         """
         <svg xmlns="http://www.w3.org/2000/svg" width="\(Int(viewBoxWidth))" height="\(Int(viewBoxHeight))" viewBox="0 0 \(Int(viewBoxWidth)) \(Int(viewBoxHeight))">
-          <path d="\(svgPath)" fill="blue" />
+          <path d="\(svgPath)" fill="blue" fill-opacity="\(String(format: "%.2f", fillAlpha / 100))" />
         </svg>
         """
     }
@@ -121,7 +122,7 @@ struct ContentView: View {
         VStack {
             VStack {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.blue)
+                    .fill(.blue.opacity(fillAlpha / 100))
                     .frame(width: min(viewBoxWidth, 300), height: min(viewBoxHeight, 300))
             }
             .frame(maxWidth: .infinity)
@@ -132,6 +133,7 @@ struct ContentView: View {
                 HStack(spacing: 16) {
                     DraggableNumberField(label: "W", value: $viewBoxWidth)
                     DraggableNumberField(label: "H", value: $viewBoxHeight)
+                    DraggableNumberField(label: "A", value: $fillAlpha, range: 0...100)
                 }
                 .padding(.horizontal)
 
