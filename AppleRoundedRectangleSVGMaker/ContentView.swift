@@ -262,6 +262,85 @@ struct CurvatureCombView: View {
     }
 }
 
+struct ReferenceLinesView: View {
+    let cornerRadius: Double
+    let width: Double
+    let height: Double
+    let padding: Double = 80
+
+    var body: some View {
+        Canvas { context, size in
+            let rect = CGRect(x: padding, y: padding, width: width, height: height)
+            let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            let path = shape.path(in: rect)
+
+            // Collect curve start/end points and their tangent directions
+            var currentPoint = CGPoint.zero
+            var firstPoint = CGPoint.zero
+
+            path.forEach { element in
+                switch element {
+                case .move(to: let p):
+                    currentPoint = p
+                    firstPoint = p
+                case .line(to: let p):
+                    currentPoint = p
+                case .curve(to: let end, control1: let cp1, control2: let cp2):
+                    // Tangent at curve start: direction from start toward cp1
+                    let startTanX = cp1.x - currentPoint.x
+                    let startTanY = cp1.y - currentPoint.y
+                    let startLen = sqrt(startTanX * startTanX + startTanY * startTanY)
+
+                    // Tangent at curve end: direction from cp2 toward end
+                    let endTanX = end.x - cp2.x
+                    let endTanY = end.y - cp2.y
+                    let endLen = sqrt(endTanX * endTanX + endTanY * endTanY)
+
+                    let lineExtension = max(width, height) * 0.3
+
+                    if startLen > 0.01 {
+                        let dx = startTanX / startLen
+                        let dy = startTanY / startLen
+                        var line = Path()
+                        line.move(to: CGPoint(
+                            x: currentPoint.x - dx * lineExtension,
+                            y: currentPoint.y - dy * lineExtension
+                        ))
+                        line.addLine(to: CGPoint(
+                            x: currentPoint.x + dx * lineExtension,
+                            y: currentPoint.y + dy * lineExtension
+                        ))
+                        context.stroke(line, with: .color(.red.opacity(0.8)), lineWidth: 2)
+                    }
+
+                    if endLen > 0.01 {
+                        let dx = endTanX / endLen
+                        let dy = endTanY / endLen
+                        var line = Path()
+                        line.move(to: CGPoint(
+                            x: end.x - dx * lineExtension,
+                            y: end.y - dy * lineExtension
+                        ))
+                        line.addLine(to: CGPoint(
+                            x: end.x + dx * lineExtension,
+                            y: end.y + dy * lineExtension
+                        ))
+                        context.stroke(line, with: .color(.red.opacity(0.8)), lineWidth: 2)
+                    }
+
+                    currentPoint = end
+                case .quadCurve(to: let p, control: _):
+                    currentPoint = p
+                case .closeSubpath:
+                    currentPoint = firstPoint
+                }
+            }
+        }
+        .frame(width: width + padding * 2, height: height + padding * 2)
+        .allowsHitTesting(false)
+    }
+}
+
 struct ContentView: View {
     @State private var cornerRadius: Double = 20
     @State private var viewBoxWidth: Double = 300
@@ -271,6 +350,7 @@ struct ContentView: View {
     @State private var iconMode = false
     @State private var transparentBackground = false
     @State private var showCurvatureComb = false
+    @State private var showReferenceLines = false
     @State private var combScale: Double = 300
     @State private var combPadding: Double = 80
 
@@ -331,6 +411,13 @@ struct ContentView: View {
                             .stroke(.blue.opacity(fillAlpha / 100), lineWidth: 2)
                             .frame(width: viewBoxWidth, height: effectiveHeight)
                     }
+                    if showReferenceLines {
+                        ReferenceLinesView(
+                            cornerRadius: effectiveCornerRadius,
+                            width: viewBoxWidth,
+                            height: effectiveHeight
+                        )
+                    }
                     if showCurvatureComb {
                         CurvatureCombView(
                             cornerRadius: effectiveCornerRadius,
@@ -346,15 +433,18 @@ struct ContentView: View {
 
             VStack {
                 HStack(spacing: 16) {
-                    DraggableNumberField(label: "W", value: $viewBoxWidth, range: 80...1000)
+                    DraggableNumberField(label: "W", value: $viewBoxWidth, range: 10...1000)
                     if !iconMode {
-                        DraggableNumberField(label: "H", value: $viewBoxHeight, range: 80...1000)
+                        DraggableNumberField(label: "H", value: $viewBoxHeight, range: 10...1000)
                     }
                     DraggableNumberField(label: "A", value: $fillAlpha, range: 0...100)
                 }
                 .padding(.horizontal)
 
                 Toggle("Icon Mode", isOn: $iconMode)
+                    .padding(.horizontal)
+
+                Toggle("Reference Lines", isOn: $showReferenceLines)
                     .padding(.horizontal)
 
                 Toggle("Curvature Comb", isOn: $showCurvatureComb)
