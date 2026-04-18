@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		835C56162F93D8AF0069993E /* RoundedRectangle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RoundedRectangle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		835C56162F93D8AF0069993E /* AppleRoundedRectangleSVGMaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppleRoundedRectangleSVGMaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		835C56182F93D8AF0069993E /* RoundedRectangle */ = {
+		835C56182F93D8AF0069993E /* AppleRoundedRectangleSVGMaker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = RoundedRectangle;
+			path = AppleRoundedRectangleSVGMaker;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		835C560D2F93D8AF0069993E = {
 			isa = PBXGroup;
 			children = (
-				835C56182F93D8AF0069993E /* RoundedRectangle */,
+				835C56182F93D8AF0069993E /* AppleRoundedRectangleSVGMaker */,
 				835C56172F93D8AF0069993E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		835C56172F93D8AF0069993E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				835C56162F93D8AF0069993E /* RoundedRectangle.app */,
+				835C56162F93D8AF0069993E /* AppleRoundedRectangleSVGMaker.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		835C56152F93D8AF0069993E /* RoundedRectangle */ = {
+		835C56152F93D8AF0069993E /* AppleRoundedRectangleSVGMaker */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 835C56212F93D8B00069993E /* Build configuration list for PBXNativeTarget "RoundedRectangle" */;
+			buildConfigurationList = 835C56212F93D8B00069993E /* Build configuration list for PBXNativeTarget "AppleRoundedRectangleSVGMaker" */;
 			buildPhases = (
 				835C56122F93D8AF0069993E /* Sources */,
 				835C56132F93D8AF0069993E /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				835C56182F93D8AF0069993E /* RoundedRectangle */,
+				835C56182F93D8AF0069993E /* AppleRoundedRectangleSVGMaker */,
 			);
-			name = RoundedRectangle;
+			name = AppleRoundedRectangleSVGMaker;
 			packageProductDependencies = (
 			);
 			productName = RoundedRectangle;
-			productReference = 835C56162F93D8AF0069993E /* RoundedRectangle.app */;
+			productReference = 835C56162F93D8AF0069993E /* AppleRoundedRectangleSVGMaker.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 835C56112F93D8AF0069993E /* Build configuration list for PBXProject "RoundedRectangle" */;
+			buildConfigurationList = 835C56112F93D8AF0069993E /* Build configuration list for PBXProject "AppleRoundedRectangleSVGMaker" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				835C56152F93D8AF0069993E /* RoundedRectangle */,
+				835C56152F93D8AF0069993E /* AppleRoundedRectangleSVGMaker */,
 			);
 		};
 /* End PBXProject section */
@@ -250,6 +250,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = AppleRoundedRectangleSVGMaker;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -265,7 +266,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.cgqaq.RoundedRectangle;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cgqaq.AppleRoundedRectangleSVGMaker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -292,6 +293,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = AppleRoundedRectangleSVGMaker;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -307,7 +309,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.cgqaq.RoundedRectangle;
+				PRODUCT_BUNDLE_IDENTIFIER = com.cgqaq.AppleRoundedRectangleSVGMaker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -326,7 +328,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		835C56112F93D8AF0069993E /* Build configuration list for PBXProject "RoundedRectangle" */ = {
+		835C56112F93D8AF0069993E /* Build configuration list for PBXProject "AppleRoundedRectangleSVGMaker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				835C561F2F93D8B00069993E /* Debug */,
@@ -335,7 +337,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		835C56212F93D8B00069993E /* Build configuration list for PBXNativeTarget "RoundedRectangle" */ = {
+		835C56212F93D8B00069993E /* Build configuration list for PBXNativeTarget "AppleRoundedRectangleSVGMaker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				835C56222F93D8B00069993E /* Debug */,
