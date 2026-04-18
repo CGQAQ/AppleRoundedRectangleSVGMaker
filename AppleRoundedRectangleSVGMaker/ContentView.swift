@@ -400,9 +400,13 @@ struct ContentView: View {
     }
 
     var fullSVG: String {
-        """
+        let alpha = String(format: "%.2f", fillAlpha / 100)
+        let attrs = useFill
+            ? "fill=\"blue\" fill-opacity=\"\(alpha)\""
+            : "fill=\"none\" stroke=\"blue\" stroke-opacity=\"\(alpha)\" stroke-width=\"2\""
+        return """
         <svg xmlns="http://www.w3.org/2000/svg" width="\(Int(viewBoxWidth))" height="\(Int(effectiveHeight))" viewBox="0 0 \(Int(viewBoxWidth)) \(Int(effectiveHeight))">
-          <path d="\(svgPath)" \(useFill ? "fill=\"blue\" fill-opacity=\"\(String(format: "%.2f", fillAlpha / 100))\"" : "fill=\"none\" stroke=\"blue\" stroke-opacity=\"\(String(format: "%.2f", fillAlpha / 100))\" stroke-width=\"2\"")" />
+          <path d="\(svgPath)" \(attrs) />
         </svg>
         """
     }
