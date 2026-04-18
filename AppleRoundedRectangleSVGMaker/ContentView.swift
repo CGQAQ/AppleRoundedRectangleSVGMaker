@@ -347,7 +347,13 @@ struct ContentView: View {
     @State private var viewBoxHeight: Double = 300
     @State private var fillAlpha: Double = 100
     @State private var useFill = true
-    @State private var iconMode = false
+    @State private var iconMode: IconMode = .off
+
+    enum IconMode: String, CaseIterable {
+        case off = "Off"
+        case icon2237 = "22.37%"
+        case icon2250 = "22.5%"
+    }
     @State private var transparentBackground = false
     @State private var showCurvatureComb = false
     @State private var showReferenceLines = false
@@ -356,15 +362,18 @@ struct ContentView: View {
 
     @State private var showCopiedToast = false
 
+    var isIconMode: Bool { iconMode != .off }
+
     var effectiveCornerRadius: Double {
-        if iconMode {
-            return viewBoxWidth * 0.2237
+        switch iconMode {
+        case .off: return cornerRadius
+        case .icon2237: return viewBoxWidth * 0.2237
+        case .icon2250: return viewBoxWidth * 0.225
         }
-        return cornerRadius
     }
 
     var effectiveHeight: Double {
-        iconMode ? viewBoxWidth : viewBoxHeight
+        isIconMode ? viewBoxWidth : viewBoxHeight
     }
 
     var svgPath: String {
@@ -434,15 +443,20 @@ struct ContentView: View {
             VStack {
                 HStack(spacing: 16) {
                     DraggableNumberField(label: "W", value: $viewBoxWidth, range: 10...1000)
-                    if !iconMode {
+                    if !isIconMode {
                         DraggableNumberField(label: "H", value: $viewBoxHeight, range: 10...1000)
                     }
                     DraggableNumberField(label: "A", value: $fillAlpha, range: 0...100)
                 }
                 .padding(.horizontal)
 
-                Toggle("Icon Mode", isOn: $iconMode)
-                    .padding(.horizontal)
+                Picker("Icon Mode", selection: $iconMode) {
+                    ForEach(IconMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
 
                 Toggle("Reference Lines", isOn: $showReferenceLines)
                     .padding(.horizontal)
@@ -478,7 +492,7 @@ struct ContentView: View {
                 Toggle("Transparent Background", isOn: $transparentBackground)
                     .padding(.horizontal)
 
-                if !iconMode {
+                if !isIconMode {
                     Slider(value: $cornerRadius, in: 0...min(viewBoxWidth, viewBoxHeight) / 2)
                         .padding(.horizontal)
 
