@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 #if canImport(AppKit)
 import AppKit
 #elseif canImport(UIKit)
@@ -68,7 +69,7 @@ struct CurvatureCombView: View {
     let rect: CGRect
     var combScale: Double
     var combPadding: Double
-    let samplesPerCurve: Int = 40
+    var samplesPerCurve: Int = 40
     let samplesPerLine: Int = 4
 
     struct CombSample {
@@ -341,12 +342,54 @@ struct ReferenceLinesView: View {
     }
 }
 
+enum RenderMode: String, CaseIterable {
+    case swiftUI = "SwiftUI"
+    case appKit = "AppKit"
+}
+
+#if canImport(AppKit)
+struct AppKitRoundedRectView: NSViewRepresentable {
+    let cornerRadius: Double
+    let width: Double
+    let height: Double
+    let fillAlpha: Double
+    let useFill: Bool
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        nsView.layer?.sublayers?.forEach { $0.removeFromSuperlayer() }
+
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.frame = CGRect(x: 0, y: 0, width: width, height: height)
+        shapeLayer.cornerRadius = cornerRadius
+        shapeLayer.cornerCurve = .continuous
+
+        let alpha = CGFloat(fillAlpha / 100)
+        if useFill {
+            shapeLayer.backgroundColor = NSColor.systemBlue.withAlphaComponent(alpha).cgColor
+        } else {
+            shapeLayer.backgroundColor = nil
+            shapeLayer.borderColor = NSColor.systemBlue.withAlphaComponent(alpha).cgColor
+            shapeLayer.borderWidth = 2
+        }
+
+        nsView.layer?.addSublayer(shapeLayer)
+    }
+}
+#endif
+
 struct ContentView: View {
     @State private var cornerRadius: Double = 20
     @State private var viewBoxWidth: Double = 300
     @State private var viewBoxHeight: Double = 300
     @State private var fillAlpha: Double = 100
     @State private var useFill = true
+    @State private var renderMode: RenderMode = .swiftUI
     @State private var iconMode: IconMode = .off
 
     enum IconMode: String, CaseIterable {
@@ -358,6 +401,7 @@ struct ContentView: View {
     @State private var showCurvatureComb = false
     @State private var showReferenceLines = false
     @State private var combScale: Double = 300
+    @State private var combDensity: Double = 40
     @State private var combPadding: Double = 80
 
     @State private var showCopiedToast = false
@@ -385,13 +429,13 @@ struct ContentView: View {
         path.forEach { element in
             switch element {
             case .move(to: let p):
-                svg += "M \(String(format: "%.2f", p.x)) \(String(format: "%.2f", p.y)) "
+                svg += "M \(p.x) \(p.y) "
             case .line(to: let p):
-                svg += "L \(String(format: "%.2f", p.x)) \(String(format: "%.2f", p.y)) "
+                svg += "L \(p.x) \(p.y) "
             case .quadCurve(to: let p, control: let cp):
-                svg += "Q \(String(format: "%.2f", cp.x)) \(String(format: "%.2f", cp.y)) \(String(format: "%.2f", p.x)) \(String(format: "%.2f", p.y)) "
+                svg += "Q \(cp.x) \(cp.y) \(p.x) \(p.y) "
             case .curve(to: let p, control1: let cp1, control2: let cp2):
-                svg += "C \(String(format: "%.2f", cp1.x)) \(String(format: "%.2f", cp1.y)) \(String(format: "%.2f", cp2.x)) \(String(format: "%.2f", cp2.y)) \(String(format: "%.2f", p.x)) \(String(format: "%.2f", p.y)) "
+                svg += "C \(cp1.x) \(cp1.y) \(cp2.x) \(cp2.y) \(p.x) \(p.y) "
             case .closeSubpath:
                 svg += "Z"
             }
@@ -400,7 +444,7 @@ struct ContentView: View {
     }
 
     var fullSVG: String {
-        let alpha = String(format: "%.2f", fillAlpha / 100)
+        let alpha = "\(fillAlpha / 100)"
         let attrs = useFill
             ? "fill=\"blue\" fill-opacity=\"\(alpha)\""
             : "fill=\"none\" stroke=\"blue\" stroke-opacity=\"\(alpha)\" stroke-width=\"2\""
@@ -411,19 +455,75 @@ struct ContentView: View {
         """
     }
 
+    @ViewBuilder
+    private var shapeView: some View {
+        switch renderMode {
+        case .swiftUI:
+            if useFill {
+                RoundedRectangle(cornerRadius: effectiveCornerRadius, style: .continuous)
+                    .fill(.blue.opacity(fillAlpha / 100))
+                    .frame(width: viewBoxWidth, height: effectiveHeight)
+            } else {
+                RoundedRectangle(cornerRadius: effectiveCornerRadius, style: .continuous)
+                    .stroke(.blue.opacity(fillAlpha / 100), lineWidth: 2)
+                    .frame(width: viewBoxWidth, height: effectiveHeight)
+            }
+        case .appKit:
+            #if canImport(AppKit)
+            AppKitRoundedRectView(
+                cornerRadius: effectiveCornerRadius,
+                width: viewBoxWidth,
+                height: effectiveHeight,
+                fillAlpha: fillAlpha,
+                useFill: useFill
+            )
+            .frame(width: viewBoxWidth, height: effectiveHeight)
+            #endif
+        }
+    }
+
+    @MainActor
+    private func copyAsPNG() {
+        #if canImport(AppKit)
+        let renderer = ImageRenderer(content: shapeView)
+        renderer.scale = 2.0
+        guard let image = renderer.nsImage,
+              let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
+
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setData(pngData, forType: .png)
+        showCopiedToast = true
+        #endif
+    }
+
+    @MainActor
+    private func saveAsPNG() {
+        #if canImport(AppKit)
+        let renderer = ImageRenderer(content: shapeView)
+        renderer.scale = 2.0
+        guard let image = renderer.nsImage,
+              let tiffData = image.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let pngData = bitmap.representation(using: .png, properties: [:]) else { return }
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.png]
+        panel.nameFieldStringValue = "RoundedRectangle.png"
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                try? pngData.write(to: url)
+            }
+        }
+        #endif
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             VStack {
                 ZStack {
-                    if useFill {
-                        RoundedRectangle(cornerRadius: effectiveCornerRadius, style: .continuous)
-                            .fill(.blue.opacity(fillAlpha / 100))
-                            .frame(width: viewBoxWidth, height: effectiveHeight)
-                    } else {
-                        RoundedRectangle(cornerRadius: effectiveCornerRadius, style: .continuous)
-                            .stroke(.blue.opacity(fillAlpha / 100), lineWidth: 2)
-                            .frame(width: viewBoxWidth, height: effectiveHeight)
-                    }
+                    shapeView
                     if showReferenceLines {
                         ReferenceLinesView(
                             cornerRadius: effectiveCornerRadius,
@@ -436,7 +536,8 @@ struct ContentView: View {
                             cornerRadius: effectiveCornerRadius,
                             rect: CGRect(x: 0, y: 0, width: viewBoxWidth, height: effectiveHeight),
                             combScale: combScale,
-                            combPadding: combPadding
+                            combPadding: combPadding,
+                            samplesPerCurve: Int(combDensity)
                         )
                     }
                 }
@@ -452,6 +553,14 @@ struct ContentView: View {
                     }
                     DraggableNumberField(label: "A", value: $fillAlpha, range: 0...100)
                 }
+                .padding(.horizontal)
+
+                Picker("Renderer", selection: $renderMode) {
+                    ForEach(RenderMode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
                 .padding(.horizontal)
 
                 Picker("Icon Mode", selection: $iconMode) {
@@ -470,7 +579,7 @@ struct ContentView: View {
 
                 if showCurvatureComb {
                     HStack {
-                        Text("Scale")
+                        Text("Length")
                             .foregroundColor(.secondary)
                         Slider(value: $combScale, in: 100...5000)
                         Text("\(Int(combScale))")
@@ -480,10 +589,10 @@ struct ContentView: View {
                     .padding(.horizontal)
 
                     HStack {
-                        Text("Padding")
+                        Text("Density")
                             .foregroundColor(.secondary)
-                        Slider(value: $combPadding, in: 20...200)
-                        Text("\(Int(combPadding))")
+                        Slider(value: $combDensity, in: 5...100, step: 1)
+                        Text("\(Int(combDensity))")
                             .foregroundColor(.secondary)
                             .frame(width: 50)
                     }
@@ -504,26 +613,38 @@ struct ContentView: View {
                         .foregroundColor(.secondary)
                 }
 
-                TextEditor(text: .constant(fullSVG))
-                    .font(.system(.caption, design: .monospaced))
-                    .frame(height: 120)
-                    .padding(4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(.secondary.opacity(0.3))
-                    )
-                    .padding(.horizontal)
+                if renderMode == .swiftUI {
+                    TextEditor(text: .constant(fullSVG))
+                        .font(.system(.caption, design: .monospaced))
+                        .frame(height: 120)
+                        .padding(4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(.secondary.opacity(0.3))
+                        )
+                        .padding(.horizontal)
 
-                Button("Copy SVG Path") {
-                    #if canImport(AppKit)
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(fullSVG, forType: .string)
-                    #elseif canImport(UIKit)
-                    UIPasteboard.general.string = fullSVG
-                    #endif
-                    showCopiedToast = true
+                    Button("Copy SVG Path") {
+                        #if canImport(AppKit)
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(fullSVG, forType: .string)
+                        #elseif canImport(UIKit)
+                        UIPasteboard.general.string = fullSVG
+                        #endif
+                        showCopiedToast = true
+                    }
+                    .padding(.top, 8)
                 }
-                .padding(.top, 8)
+
+                HStack {
+                    Button("Copy as PNG") {
+                        copyAsPNG()
+                    }
+                    Button("Save as PNG") {
+                        saveAsPNG()
+                    }
+                }
+                .padding(.top, renderMode == .swiftUI ? 4 : 8)
             }
             .overlay(alignment: .bottom) {
                 if showCopiedToast {
